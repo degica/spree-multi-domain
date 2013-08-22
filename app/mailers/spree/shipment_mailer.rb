@@ -1,14 +1,11 @@
-class Spree::ShipmentMailer < ActionMailer::Base
-  helper "spree/base"
-
-  def shipped_email(shipment, resend=false)
-    @shipment = shipment
-    subject = (resend ? "[RESEND] " : "")
-    subject += "#{Spree::Config[:site_name]} Shipment Notification ##{shipment.order.number}"
-    mail_params = {:to => shipment.order.email, :subject => subject}
-    if shipment.order.store && shipment.order.store.email.present?
-      mail_params[:from] = shipment.order.store.email
+module Spree
+  class ShipmentMailer < BaseMailer
+    def shipped_email(shipment, resend = false)
+      @shipment = shipment.is_a?(Spree::Shipment) ? shipment : Spree::Shipment.find(shipment)
+      @store = @shipment.order.store
+      subject = (resend ? "[#{t(:resend).upcase}] " : '')
+      subject += "#{Spree::Config[:site_name]} #{t('shipment_mailer.shipped_email.subject')} ##{@shipment.order.number}"
+      mail(to: @shipment.order.email, from: from_address, subject: subject)
     end
-    mail(mail_params)
   end
 end
